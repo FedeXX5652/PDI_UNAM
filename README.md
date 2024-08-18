@@ -11,7 +11,7 @@ En este curso se exploran técnicas y algoritmos para el procesamiento y anális
 | Nombre | Número de Cuenta | Correo Electrónico |
 |--------|------------------|---------------------|
 | David Gutiérrez | [Número de Cuenta] | davidgn2k@gmail.com |
-| Ricardo [Apellido] | [Número de Cuenta] | misnokaiser1@gmail.com |
+| Ricardo Velasco] | 417095693 | misnokaiser1@gmail.com |
 | Federico Galante | 620251125 | fedegalant@gmail.com |
 
 ## Requisitos
