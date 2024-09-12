@@ -8,15 +8,32 @@ def eliminar_zonas_nulas(imagen):
     mascara = imagen > 0
     return mascara
 
+# Función para ajustar la intensidad de una imagen para que coincida con un brillo objetivo
+def ajustar_brillo(imagen, brillo_objetivo):
+    brillo_actual = np.mean(imagen[imagen > 0])
+    if brillo_actual == 0:
+        return imagen
+    factor = brillo_objetivo / brillo_actual
+    imagen_ajustada = np.clip(imagen * factor, 0, 256)
+    return imagen_ajustada.astype(np.uint8)  # Asegurarse de que el tipo de datos sea np.uint8
+
 # Función para completar la imagen con valores de la otra imagen donde hay ceros
 def completar_imagenes(imagen1, imagen2):
     # Crear la máscara para ambas imágenes
     mascara1 = eliminar_zonas_nulas(imagen1)
     mascara2 = eliminar_zonas_nulas(imagen2)
     
+    # Calcular el brillo promedio en áreas no nulas
+    brillo1 = np.mean(imagen1[mascara1])
+    brillo2 = np.mean(imagen2[mascara2])
+    
+    # Ajustar el brillo de las imágenes
+    imagen1_ajustada = ajustar_brillo(imagen1, brillo2)
+    imagen2_ajustada = ajustar_brillo(imagen2, brillo1)
+    
     # Crear la imagen completada usando la máscara
-    imagen_completada = np.copy(imagen1)
-    imagen_completada[~mascara1] = imagen2[~mascara1]  # Llenar donde imagen1 tiene ceros con los valores de imagen2
+    imagen_completada = np.copy(imagen1_ajustada)
+    imagen_completada[~mascara1] = imagen2_ajustada[~mascara1]  # Llenar donde imagen1 tiene ceros con los valores de imagen2
 
     return imagen_completada
 
@@ -76,18 +93,18 @@ plt.show()
 plt.figure(figsize=(12, 12))
 
 plt.subplot(2, 2, 1)
-hist1 = cv2.calcHist([imagen1], [0], None, [256], [0, 256])
+hist1 = cv2.calcHist([imagen1.astype(np.uint8)], [0], None, [256], [0, 256])
 plt.plot(hist1)
 plt.title('Histograma Imagen 1')
 
 plt.subplot(2, 2, 2)
-hist2 = cv2.calcHist([imagen2], [0], None, [256], [0, 256])
+hist2 = cv2.calcHist([imagen2.astype(np.uint8)], [0], None, [256], [0, 256])
 plt.plot(hist2)
 plt.title('Histograma Imagen 2')
 
 # Mostrar el histograma de la imagen completada
 plt.subplot(2, 2, 3)
-hist_completada = cv2.calcHist([imagen_completada], [0], None, [256], [0, 256])
+hist_completada = cv2.calcHist([imagen_completada.astype(np.uint8)], [0], None, [256], [0, 256])
 plt.plot(hist_completada)
 plt.title('Histograma de la Imagen Completada')
 
@@ -106,7 +123,7 @@ plt.axis('off')  # Desactivar los ejes para una visualización más limpia
 plt.show()
 
 # Calcular y mostrar el histograma de la zona de traslape
-hist_traslape = cv2.calcHist([traslape], [0], None, [256], [0, 256])
+hist_traslape = cv2.calcHist([traslape.astype(np.uint8)], [0], None, [256], [0, 256])
 
 plt.figure(figsize=(6, 6))
 plt.plot(hist_traslape)
@@ -137,12 +154,12 @@ plt.show()
 plt.figure(figsize=(12, 6))
 
 plt.subplot(1, 2, 1)
-hist1_ajustada = cv2.calcHist([imagen1_ajustada], [0], None, [256], [0, 256])
+hist1_ajustada = cv2.calcHist([imagen1_ajustada.astype(np.uint8)], [0], None, [256], [0, 256])
 plt.plot(hist1_ajustada)
 plt.title('Histograma Imagen 1 Ajustada')
 
 plt.subplot(1, 2, 2)
-hist2_ajustada = cv2.calcHist([imagen2_ajustada], [0], None, [256], [0, 256])
+hist2_ajustada = cv2.calcHist([imagen2_ajustada.astype(np.uint8)], [0], None, [256], [0, 256])
 plt.plot(hist2_ajustada)
 plt.title('Histograma Imagen 2 Ajustada')
 
@@ -160,7 +177,7 @@ plt.axis('off')  # Desactivar los ejes para una visualización más limpia
 plt.show()
 
 # Mostrar el histograma del mosaico final
-hist_mosaico = cv2.calcHist([mosaico_ajustado], [0], None, [256], [0, 256])
+hist_mosaico = cv2.calcHist([mosaico_ajustado.astype(np.uint8)], [0], None, [256], [0, 256])
 
 plt.figure(figsize=(6, 6))
 plt.plot(hist_mosaico)
