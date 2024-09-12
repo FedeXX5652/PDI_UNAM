@@ -66,17 +66,3 @@ hist_zona_B_especificada = cv2.calcHist([zona_B_especificada], [0], None, [256],
 mosaico_especificado = np.hstack((zona_A_especificada, zona_B_especificada))
 # Histograma del Mosaico especificado 
 hist_mosaico_especificado = cv2.calcHist([mosaico_especificado], [0], None, [256], [0, 256])
-
-# Mostrar las imágenes originales y la imagen completada
-plt.figure(figsize=(12, 12))
-plt.subplot(2, 2, 1)
-plt.imshow(mosaico_especificado, cmap='gray')
-plt.title('Mosaico especificado')
-plt.axis('off')  # Desactivar los ejes para una visualización más limpia
-
-plt.subplot(2, 2, 2)
-plt.plot(mosaico)
-plt.title('Mosaico sin especificar')
-
-plt.tight_layout()
-plt.show()
