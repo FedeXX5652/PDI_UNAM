@@ -1,0 +1,68 @@
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+from skimage import exposure
+
+# Función para eliminar las zonas con información nula (cero)
+def eliminar_zonas_nulas(imagen):
+    #Obteniendo el numero de columnas en la imagen
+    height, width = imagen.shape
+    # buscando la primera columna donde la información sea nula para realizar el corte vertical.
+    top_left = -1
+    top_right = -1
+    # Se determinan los limites de la zona nula en la primera columna.
+    top_left_is_set = False
+    for i in range(width):
+        if not top_left_is_set and imagen[0][i] == 0:
+            top_left = i
+            top_left_is_set = True
+        if imagen[0][i] == 0:
+            top_right = i
+    # Se determinan los limites de la zona nula en la última columna.
+    bottom_left = - 1
+    bottom_right = - 1
+    bottom_left_is_set = False
+    for i in range(width):
+        if not bottom_left_is_set and imagen[height - 1][i] == 0:
+            bottom_left = i
+            bottom_left_is_set = True
+        if imagen[height - 1][i] == 0:
+            bottom_right = i
+    # Se realiza el corte vertical según si la zona nula está orientada a la izquierda o a la derecha
+    if bottom_left == 0 or top_left == 0:
+        return imagen[0:height, max(bottom_right, top_right):width]
+    return imagen[0:height, 0:min(bottom_left, top_left)]
+
+# Cargar las imágenes satelitales en escala de grises
+zona_A = cv2.imread('/Users/davidgutierrez/Documents/2025-1/PDI/PDI_UNAM/ej2/2/zonaA_b5.tif', cv2.IMREAD_GRAYSCALE)
+zona_B = cv2.imread('/Users/davidgutierrez/Documents/2025-1/PDI/PDI_UNAM/ej2/2/zonaB_b5.tif', cv2.IMREAD_GRAYSCALE)
+# Verificar si las imágenes se cargaron correctamente
+if zona_A is None or zona_B is None:
+    raise Exception("No se pudieron cargar las imágenes satelitales")
+
+# Imagen de la zona A sin nulidad
+zona_A_sin_nulidad = eliminar_zonas_nulas(zona_A)
+# Imagen de la zona b sin nulidad
+zona_B_sin_nulidad = eliminar_zonas_nulas(zona_B)
+# Histograma de la Zona A
+hist_zona_A_sin_nulidad = cv2.calcHist([zona_A_sin_nulidad], [0], None, [256], [0, 256])
+# Histograma de la Zona B
+hist_zona_B_sin_nulidad = cv2.calcHist([zona_B_sin_nulidad], [0], None, [256], [0, 256])
+# Concatenación horizontal de las imágenes de las zonas A y B.
+mosaico = np.hstack((zona_A_sin_nulidad, zona_B_sin_nulidad))
+# Histograma del Mosaico
+hist_mosaico = cv2.calcHist([mosaico], [0], None, [256], [0, 256])
+# Especificando Zona A según Mosaico
+zona_A_especificada = exposure.match_histograms(zona_A_sin_nulidad, mosaico)
+zona_A_especificada = zona_A_especificada.astype(np.uint8) # float -> int
+# Especificando Zona B según Mosaico
+zona_B_especificada = exposure.match_histograms(zona_B_sin_nulidad, mosaico)
+zona_B_especificada = zona_B_especificada.astype(np.uint8) # float -> int
+# Histrograma de la Zona A especificada
+hist_zona_A_especificada = cv2.calcHist([zona_A_especificada], [0], None, [256], [0, 256])
+# Histrograma de la Zona B especificada
+hist_zona_B_especificada = cv2.calcHist([zona_B_especificada], [0], None, [256], [0, 256])
+# Mosaico resultante de la unión de ambas zonas especificadas
+mosaico_especificado = np.hstack((zona_A_especificada, zona_B_especificada))
+# Histograma del Mosaico especificado 
+hist_mosaico_especificado = cv2.calcHist([mosaico_especificado], [0], None, [256], [0, 256])

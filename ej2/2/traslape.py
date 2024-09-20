@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+from skimage import exposure
 
 # Función para eliminar las zonas con información nula (cero)
 def eliminar_zonas_nulas(imagen):
@@ -58,33 +59,49 @@ def especificar_histograma(imagen, histograma_objetivo):
     return imagen_ajustada
 
 # Cargar las imágenes satelitales en escala de grises
-imagen1 = cv2.imread('zonaA_b5.tif', cv2.IMREAD_GRAYSCALE)
-imagen2 = cv2.imread('zonaB_b5.tif', cv2.IMREAD_GRAYSCALE)
-
+zona_A = cv2.imread('/Users/davidgutierrez/Documents/2025-1/PDI/PDI_UNAM/ej2/2/zonaA_b5.tif', cv2.IMREAD_GRAYSCALE)
+zona_B = cv2.imread('/Users/davidgutierrez/Documents/2025-1/PDI/PDI_UNAM/ej2/2/zonaB_b5.tif', cv2.IMREAD_GRAYSCALE)
 # Verificar si las imágenes se cargaron correctamente
-if imagen1 is None or imagen2 is None:
+if zona_A is None or zona_B is None:
     raise Exception("No se pudieron cargar las imágenes satelitales")
 
-# Completar la imagen 1 con los valores de imagen 2 donde hay ceros
-imagen_completada = completar_imagenes(imagen1, imagen2)
+# Imagen de la zona A sin nulidad
+zona_A_sin_nulidad = eliminar_zonas_nulas(zona_A)
+# Imagen de la zona b sin nulidad
+zona_B_sin_nulidad = eliminar_zonas_nulas(zona_B)
+# Histograma de la Zona A
+hist_zona_A_sin_nulidad = cv2.calcHist([zona_A_sin_nulidad], [0], None, [256], [0, 256])
+# Histograma de la Zona B
+hist_zona_B_sin_nulidad = cv2.calcHist([zona_B_sin_nulidad], [0], None, [256], [0, 256])
+# Concatenación horizontal de las imágenes de las zonas A y B.
+mosaico = np.hstack((zona_A_sin_nulidad, zona_B_sin_nulidad))
+# Histograma del Mosaico
+hist_mosaico = cv2.calcHist([mosaico], [0], None, [256], [0, 256])
+# Especificando Zona A según Mosaico
+zona_A_especificada = exposure.match_histograms(zona_A_sin_nulidad, mosaico)
+zona_A_especificada = zona_A_especificada.astype(np.uint8) # float -> int
+# Especificando Zona B según Mosaico
+zona_B_especificada = exposure.match_histograms(zona_B_sin_nulidad, mosaico)
+zona_B_especificada = zona_B_especificada.astype(np.uint8) # float -> int
+# Histrograma de la Zona A especificada
+hist_zona_A_especificada = cv2.calcHist([zona_A_especificada], [0], None, [256], [0, 256])
+# Histrograma de la Zona B especificada
+hist_zona_B_especificada = cv2.calcHist([zona_B_especificada], [0], None, [256], [0, 256])
+# Mosaico resultante de la unión de ambas zonas especificadas
+mosaico_especificado = np.hstack((zona_A_especificada, zona_B_especificada))
+# Histograma del Mosaico especificado 
+hist_mosaico_especificado = cv2.calcHist([mosaico_especificado], [0], None, [256], [0, 256])
 
 # Mostrar las imágenes originales y la imagen completada
 plt.figure(figsize=(12, 12))
-
 plt.subplot(2, 2, 1)
-plt.imshow(imagen1, cmap='gray')
-plt.title('Imagen Satelital 1')
+plt.imshow(mosaico_especificado, cmap='gray')
+plt.title('Mosaico especificado')
 plt.axis('off')  # Desactivar los ejes para una visualización más limpia
 
 plt.subplot(2, 2, 2)
-plt.imshow(imagen2, cmap='gray')
-plt.title('Imagen Satelital 2')
-plt.axis('off')  # Desactivar los ejes para una visualización más limpia
-
-plt.subplot(2, 2, 3)
-plt.imshow(imagen_completada, cmap='gray')
-plt.title('Imagen Completada')
-plt.axis('off')  # Desactivar los ejes para una visualización más limpia
+plt.plot(mosaico)
+plt.title('Mosaico sin especificar')
 
 plt.tight_layout()
 plt.show()
