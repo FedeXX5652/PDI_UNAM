@@ -46,8 +46,8 @@ def colorQuant(Z, K, criteria):
    return res2
 
 # Cargar las imágenes satelitales en escala de grises
-zona_A = cv2.imread('/Users/davidgutierrez/Documents/2025-1/PDI/PDI_UNAM/ej2/2/zonaA_b5.tif', cv2.IMREAD_GRAYSCALE)
-zona_B = cv2.imread('/Users/davidgutierrez/Documents/2025-1/PDI/PDI_UNAM/ej2/2/zonaB_b5.tif', cv2.IMREAD_GRAYSCALE)
+zona_A = cv2.imread('zonaA_b5.tif', cv2.IMREAD_GRAYSCALE)
+zona_B = cv2.imread('zonaB_b5.tif', cv2.IMREAD_GRAYSCALE)
 # Verificar si las imágenes se cargaron correctamente
 if zona_A is None or zona_B is None:
     raise Exception("No se pudieron cargar las imágenes satelitales")
@@ -79,6 +79,22 @@ mosaico_especificado = np.hstack((zona_A_especificada, zona_B_especificada))
 # Histograma del Mosaico especificado 
 hist_mosaico_especificado = cv2.calcHist([mosaico_especificado], [0], None, [256], [0, 256])
 # Reduciendo los niveles de cuantización del mosaico a 128
+
+# Mostrar las imágenes originales y la imagen completada
+plt.figure(figsize=(12, 12))
+plt.subplot(2, 2, 1)
+plt.imshow(mosaico_especificado, cmap='gray')
+plt.title('')
+plt.axis('off')  # Desactivar los ejes para una visualización más limpia
+
+
+plt.subplot(2, 2, 2)
+plt.plot(hist_mosaico_especificado)
+plt.title('')
+
+plt.tight_layout()
+plt.show()
+
 mosaico_128 = mosaico // 2
 # Histograma del mozaico con 128 niveles de cuantización
 hist_mosaico_128 = cv2.calcHist([mosaico_128], [0], None, [128], [0, 128])
