@@ -5,12 +5,27 @@ function f = lowPassBlockFilterGenerator(n)
     f = ones(n, n)/(n*n);
 end
 
-function f = binomialFilterGenerator(n)
+function f = binomialCoefficientVectorGenerator(n)
     res = zeros(n, 1);
     for k = 0:n-1
         res(k + 1 , 1) = factorial(n - 1)/(factorial(k)*factorial(n - 1 - k));
     end
-    m = res*res';
+    f = res;
+end
+
+function f = binomialCoefficientVectorGeneratorFirstDerivative(n)
+    nMinusOne = binomialCoefficientVectorGenerator(n - 1);
+    f = paddata(nMinusOne, n) - paddata(nMinusOne, n, Side='leading');
+end
+
+function f = firstDerivativeBinomialFilterGenerator(n)
+    v = binomialCoefficientVectorGeneratorFirstDerivative(n);
+    f = v*v';
+end
+
+function f = binomialFilterGenerator(n)
+    coefficients = binomialCoefficientVectorGenerator(n);
+    m = coefficients*coefficients';
     f = m/sum(m, 'all');
 end
 
@@ -67,7 +82,14 @@ end
 %imwrite(imageConvolver(J, prewittFilterGenerator('x')), "prewittXNoisy.jpg");
 %imwrite(imageConvolver(J, prewittFilterGenerator('y')), "prewittYNoisy.jpg");
 
-imwrite(imageConvolver(I, sobelFilterGenerator('x')), "sobelXOriginal.jpg");
-imwrite(imageConvolver(I, sobelFilterGenerator('y')), "sobelYOriginal.jpg");
-imwrite(imageConvolver(J, sobelFilterGenerator('x')), "sobelXNoisy.jpg");
-imwrite(imageConvolver(J, sobelFilterGenerator('y')), "sobelYNoisy.jpg");
+%imwrite(imageConvolver(I, sobelFilterGenerator('x')), "sobelXOriginal.jpg");
+%imwrite(imageConvolver(I, sobelFilterGenerator('y')), "sobelYOriginal.jpg");
+%imwrite(imageConvolver(J, sobelFilterGenerator('x')), "sobelXNoisy.jpg");
+%imwrite(imageConvolver(J, sobelFilterGenerator('y')), "sobelYNoisy.jpg");
+
+imwrite(imageConvolver(I, firstDerivativeBinomialFilterGenerator(5)), "gaussianDerivativeOriginal5x5.jpg");
+imwrite(imageConvolver(J, firstDerivativeBinomialFilterGenerator(5)), "gaussianDerivativeNoisy5x5.jpg");
+imwrite(imageConvolver(I, firstDerivativeBinomialFilterGenerator(7)), "gaussianDerivativeOriginal7x7.jpg");
+imwrite(imageConvolver(J, firstDerivativeBinomialFilterGenerator(7)), "gaussianDerivativeNoisy7x7.jpg");
+imwrite(imageConvolver(I, firstDerivativeBinomialFilterGenerator(11)), "gaussianDerivativeOriginal11x11.jpg");
+imwrite(imageConvolver(J, firstDerivativeBinomialFilterGenerator(11)), "gaussianDerivativeNoisy11x11.jpg");
