@@ -21,12 +21,20 @@ function f = imageConvolver(colorImage, filter)
     f = uint8(cat(3, conv2(rChannel, filter), conv2(gChannel, filter), conv2(bChannel, filter)));
 end
 
-function f = prewittFilterGenerator(n, orientation)
-    if orientation == 'h'
-        
-    else
+function f = prewittFilterGenerator(orientation)
+    if orientation == 'x'
+        f = [1 ; 1; 1]*[1, 0, -1];
+    else 
+        f = [1; 0; -1]*[1, 1, 1];
+    end
+end
 
-    end;
+function f = sobelFilterGenerator(orientation)
+    if orientation == 'x'
+        f = [-1; -2; -1]*[1, 0, -1];
+    else
+        f = [1; 0; -1]*[-1, -2, -1];
+    end
 end
 
 
@@ -48,7 +56,18 @@ end
 %imwrite(imageConvolver(I, binomialFilterGenerator(11)), "11x11LowPassGaussianOriginal.jpg");
 %imwrite(imageConvolver(J, binomialFilterGenerator(11)), "11x11LowPassGaussianNoisy.jpg");
 
-imwrite(imageConvolver(I, [1, -1]), "basicVerticalBorderDetectorOriginal.jpg");
-imwrite(imageConvolver(J, [1, -1]), "basicVerticalBorderDetectorNoisy.jpg");
-imwrite(imageConvolver(I, [1; -1]), "basicHorizontalBorderDetectorOriginal.jpg");
-imwrite(imageConvolver(J, [1; -1]), "basicHorizontalBorderDetectorNoisy.jpg");
+
+%imwrite(imageConvolver(I, [-1, 1]), "basicVerticalBorderDetectorOriginal.jpg");
+%imwrite(imageConvolver(J, [-1, 1]), "basicVerticalBorderDetectorNoisy.jpg");
+%imwrite(imageConvolver(I, [-1; 1]), "basicHorizontalBorderDetectorOriginal.jpg");
+%imwrite(imageConvolver(J, [-1; 1]), "basicHorizontalBorderDetectorNoisy.jpg");
+
+%imwrite(imageConvolver(I, prewittFilterGenerator('x')), "prewittXOriginal.jpg");
+%imwrite(imageConvolver(I, prewittFilterGenerator('y')), "prewittYOriginal.jpg");
+%imwrite(imageConvolver(J, prewittFilterGenerator('x')), "prewittXNoisy.jpg");
+%imwrite(imageConvolver(J, prewittFilterGenerator('y')), "prewittYNoisy.jpg");
+
+imwrite(imageConvolver(I, sobelFilterGenerator('x')), "sobelXOriginal.jpg");
+imwrite(imageConvolver(I, sobelFilterGenerator('y')), "sobelYOriginal.jpg");
+imwrite(imageConvolver(J, sobelFilterGenerator('x')), "sobelXNoisy.jpg");
+imwrite(imageConvolver(J, sobelFilterGenerator('y')), "sobelYNoisy.jpg");
