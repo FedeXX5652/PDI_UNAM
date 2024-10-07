@@ -2,10 +2,10 @@ from filter import Filter
 import os
 import numpy as np
 
-IMG = os.path.join(os.path.dirname(__file__), "img.jpg")
+IMG = os.path.join(os.path.dirname(__file__), "Aerial04.jpg")
 
-# Cargar imagen
-image = Filter.load_image_as_grayscale(IMG)
+# Cargar imagen en color
+image = Filter.load_image(IMG)
 
 # Crear versión con ruido
 noisy_image = Filter.add_noise(image)

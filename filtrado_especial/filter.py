@@ -11,17 +11,24 @@ class Filter:
         return np.rot90(convolve2d(np.rot90(x, 2), np.rot90(y, 2), mode=mode), 2)
 
     @staticmethod
-    def load_image_as_grayscale(image_path):
-        # Carga una imagen en escala de grises desde una ruta especificada.
-        image = cv2.imread(image_path, 0)
+    def load_image(image_path):
+        # Carga una imagen en color (RGB).
+        image = cv2.imread(image_path, cv2.IMREAD_COLOR)  # Cambiado a IMREAD_COLOR
         if image is None:
             raise ValueError("Image could not be loaded. Check the image path.")
         return image
 
     @staticmethod
     def apply_filter_to_image(image_matrix, filter_matrix):
-        # Aplica un filtro a una imagen usando la función de convolución.
-        return Filter.conv2(image_matrix, filter_matrix)
+        # Aplica el filtro a cada canal si la imagen es en color (más de un canal).
+        if len(image_matrix.shape) == 3:  # Si la imagen tiene 3 canales (color)
+            channels = cv2.split(image_matrix)  # Divide en canales R, G, B
+            filtered_channels = [Filter.conv2(c, filter_matrix) for c in channels]  # Aplica filtro a cada canal
+            return cv2.merge(filtered_channels)  # Une los canales filtrados
+        else:
+            # Para imágenes en escala de grises
+            return Filter.conv2(image_matrix, filter_matrix)
+
 
     @staticmethod
     def show_image(name, img, save=False):
@@ -103,10 +110,19 @@ class Filter:
 
     @staticmethod
     def add_noise(image, mean=0, std=25):
-        # Añade ruido gaussiano a la imagen.
-        noise = np.random.normal(mean, std, image.shape).astype(np.float64)
-        noisy_image = image.astype(np.float64) + noise
-        return np.clip(noisy_image, 0, 255).astype(np.uint8)
+        if len(image.shape) == 3:  # Imagen en color
+            noisy_channels = []
+            for c in cv2.split(image):
+                noise = np.random.normal(mean, std, c.shape).astype(np.float64)
+                noisy_channel = c.astype(np.float64) + noise
+                noisy_channels.append(np.clip(noisy_channel, 0, 255).astype(np.uint8))
+            return cv2.merge(noisy_channels)
+        else:
+            # Para imágenes en escala de grises
+            noise = np.random.normal(mean, std, image.shape).astype(np.float64)
+            noisy_image = image.astype(np.float64) + noise
+            return np.clip(noisy_image, 0, 255).astype(np.uint8)
+
 
     @staticmethod
     def process_image(image, filter_function, *args, **kwargs):
