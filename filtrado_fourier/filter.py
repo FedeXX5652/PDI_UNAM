@@ -144,15 +144,13 @@ class Filter:
 
     @staticmethod
     def apply_dft_filter(dft_image, dft_filter):
-        r = cv2.mulSpectrums(dft_image, dft_filter, 0)
+        r = cv2.mulSpectrums(dft_image, dft_filter, 0)  # multiplica matrices resultantes de Fourier (con componente real e imaginaria)
         return r
 
     @staticmethod
     def dft2image(dft, original_size=None):
-        # Step 1: Apply inverse DFT to convert from frequency domain to spatial domain
         spatial = cv2.idft(dft, flags=cv2.DFT_SCALE | cv2.DFT_REAL_OUTPUT)  # DFT_SCALE: scales the result, DFT_REAL_OUTPUT: returns only real values
-        
-        # Step 2: Crop the spatial result if the original size is provided
+
         if original_size:
             h, w = original_size  # Original image dimensions (height, width)
             spatial = spatial[:h, :w]  # Crop the result to its original size

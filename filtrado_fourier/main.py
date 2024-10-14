@@ -42,12 +42,16 @@ for i, size in enumerate(block_sizes):
     Filter.show_dft(f"DFT {size}x{size} x original (non-padded)", filtered_dft_original, True)
     # Filter.show_dft(f"DFT {size}x{size} x noisy (non-padded)", filtered_dft_noisy, True)
 
+    print(f"img size: {image.shape}")
+    print(f"dft size: {dft_original.shape}")
+    print(f"filter size: {filtered_original.shape}")
+    print(f"dft filter size: {filtered_dft_original.shape}")
 
     """
     PADDED
     """
     # Pad the image based on the filter size
-    filter_size = (size-1, size-1)  # Because we're using square filters
+    filter_size = (size, size)  # Because we're using square filters
     image_padded = Filter.zero_pad_img(image, filter_size)
     Filter.show_image(f"Original Padded {size}x{size}", image_padded, True)
     
@@ -69,3 +73,6 @@ for i, size in enumerate(block_sizes):
     
     Filter.show_image(f"Filtered {size}x{size} original (padded)", filtered_original_padded, True)
     Filter.show_dft(f"DFT {size}x{size} x original (padded)", filtered_dft_original_padded, True)
+
+    print(f"padded filtered img: {filtered_original_padded.shape}")
+    print(f"padded filtered img dft: {filtered_dft_original_padded.shape}")
