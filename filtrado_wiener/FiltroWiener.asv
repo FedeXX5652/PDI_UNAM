@@ -1,0 +1,50 @@
+% Cargar imagen sin ruido
+ImagenSinRuido = imread('Glaciar512.jpg'); 
+
+if size(ImagenSinRuido, 3) == 3
+    ImagenSinRuido = rgb2gray(ImagenSinRuido);
+end
+
+ImagenConRuido = imnoise(ImagenSinRuido, 'gaussian', 0.25, 0.01);
+
+% Filtro binomial 9x9
+FiltroBinomial = [1 8 28 56 70 56 28 8 1]' * [1 8 28 56 70 56 28 8 1];
+FiltroBinomial = FiltroBinomial / sum(FiltroBinomial(:)); % Normalizar
+
+% Transformada de Fourier de la imagen
+ImagenFrec = fft2(double(ImagenSinRuido));
+% Transformada de Fourier del filtro
+FiltroFrec = fft2(FiltroBinomial, 512, 512); %Padding del filtro
+
+% Multiplicación en el dominio de la frecuencia
+ImagenFiltradaFrec = ImagenFrec .* FiltroFrec;
+
+% Transformada inversa para volver al dominio espacial
+ImagenFiltrada = ifft2(ImagenFiltradaFrec);
+
+%%%%%%%%%%%%%%%
+
+% Resultados
+figure;
+imshow(uint8(ImagenSinRuido));
+title('Imagen sin Ruido');
+
+% Mostrar magnitud de la imagen en frecuencia
+figure;
+imshow(log(1 + abs(fftshift(ImagenFrec))), []);
+title('Imagen en frecuencias');
+
+% Mostrar magnitud del filtro en frecuencia
+figure;
+imshow(log(1 + abs(fftshift(FiltroFrec))), []);
+title('Filtro en frecuencias');
+
+% Mostrar magnitud de la imagen filtrada en frecuencias
+figure;
+imshow(log(1 + abs(fftshift(ImagenFiltradaFrec))), []);
+title('Imagen filtrada en frecuencias');
+
+% Mostrar imagen filtrada en el dominio espacial
+figure;
+imshow(uint8(abs(ImagenFiltrada)), []); % Mostrar la parte real de la imagen filtrada
+title('Imagen filtrada');

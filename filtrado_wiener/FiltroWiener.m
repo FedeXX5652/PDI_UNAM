@@ -1,76 +1,83 @@
-function filtro = GeneradorFiltroPasoBajasBloque(N)
-    filtro = ones(N) / (N * N); % Filtro normalizado
+% Cargar imagen sin ruido
+ImagenSinRuido = imread('Glaciar512.jpg'); 
+
+if size(ImagenSinRuido, 3) == 3
+    ImagenSinRuido = rgb2gray(ImagenSinRuido);
 end
 
-function imagen_filtrada = imageConvolver(imagen, filtro)
-    imagen_filtrada = imfilter(imagen, filtro, 'replicate'); 
+ImagenConRuido = imnoise(ImagenSinRuido, 'gaussian', 0.25, 0.01);
+
+% G = F . H (En dominio de frecuencias)
+
+% Filtro binomial 9x9 (Matriz H)
+FiltroBinomial = [1 8 28 56 70 56 28 8 1]' * [1 8 28 56 70 56 28 8 1];
+FiltroBinomial = FiltroBinomial / sum(FiltroBinomial(:)); % Normalizar
+
+% Transformada de Fourier de la imagen (Matriz F)
+ImagenFrec = fft2(double(ImagenSinRuido));
+% Transformada de Fourier del filtro (Matriz H)
+FiltroFrec = fft2(FiltroBinomial, 512, 512); % Padding del filtro
+
+% Multiplicacion en dominio de frecuencias (Matriz G)
+ImagenFiltradaFrec = ImagenFrec .* FiltroFrec; 
+
+% Transformada inversa para volver al dominio espacial
+ImagenFiltrada = ifft2(ImagenFiltradaFrec);
+
+% Calcular la matriz inversa del filtro 
+% en el dominio de la frecuencia (Matriz H^-1)
+FiltroFrecInverso = zeros(size(FiltroFrec));
+
+for i = 1:numel(FiltroFrec) % Evitar div entre 0
+    if FiltroFrec(i) ~= 0
+        FiltroFrecInverso(i) = 1 / FiltroFrec(i);
+    end
 end
 
-ImagenSinRuido = imread('Glaciar.jpg'); 
+% Producto de las matrices G y H^-1
+ProductoGHInverso = ImagenFiltradaFrec .* FiltroFrecInverso; 
 
-% 1: Restauracion con Filtro de Wiener de imagen con ruido
+% Transformada inversa para volver al dominio espacial
+ImagenProductoGHInverso = ifft2(ProductoGHInverso);
 
-ImagenConRuido = imnoise(ImagenSinRuido, 'gaussian', 0.25, 0.01); % Ruido
-ImagenRestauradaRuido = wiener2(ImagenConRuido, [5 5]); % Filtro de wiener
+%%%%%%%%%%%%%%%
 
-% 2: Restauracion con Filtro de Wiener con imagen con perdida de nitidez
-
-filtroPasoBajas = GeneradorFiltroPasoBajasBloque(9);
-ImagenBorrosa = imageConvolver(ImagenSinRuido, filtroPasoBajas);
-ImagenRestauradaPasoBajas = wiener2(ImagenBorrosa, [5 5]);
-
-% 3: Restauracion (Primero ruido y despues filtro)
-
-Imagen_Ruido_y_Filtro = imageConvolver(ImagenConRuido, filtroPasoBajas);
-ImagenRestauradaRuido_y_Filtro = wiener2(Imagen_Ruido_y_Filtro, [5 5]);
-
-% 4: Restauración (Primero filtro y despues ruido)
-
-Imagen_Filtro_y_Ruido = imnoise(ImagenBorrosa, 'gaussian', 0.25, 0.01);
-ImagenRestauradaFiltro_y_Ruido = wiener2(Imagen_Filtro_y_Ruido, [5 5]);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+% Resultados
 figure;
-imshow(ImagenSinRuido); % Original
-title('Imagen Original');
+imshow(uint8(ImagenSinRuido));
+title('Imagen sin Ruido');
 
+% Mostrar magnitud de la imagen en frecuencia
 figure;
-imshow(ImagenConRuido); % Con ruido
-title('Imagen Original con Ruido');
+imshow(log(1 + abs(fftshift(ImagenFrec))), []);
+title('Imagen en frecuencias');
 
-% 1
-
+% Mostrar magnitud del filtro en frecuencia
 figure;
-imshow(ImagenRestauradaRuido);
-title('Imagen con ruido tras filtro de Wiener');
+imshow(log(1 + abs(fftshift(FiltroFrec))), []);
+title('Filtro en frecuencias');
 
-% 2
-
+% Mostrar magnitud de la imagen filtrada en frecuencias
 figure;
-imshow(ImagenBorrosa);
-title('Imagen con perdida de nitidez (Filtro paso bajas 9x9)');
+imshow(log(1 + abs(fftshift(ImagenFiltradaFrec))), []);
+title('Imagen filtrada en frecuencias');
 
+% Mostrar imagen filtrada en el dominio espacial
 figure;
-imshow(ImagenRestauradaPasoBajas);
-title('Imagen con perdida de nitidez tras filtro de Wiener');
+imshow(uint8(ImagenFiltrada));
+title('Imagen filtrada');
 
-% 3
-
+% Mostrar la magnitud del filtro inverso en frecuencia
 figure;
-imshow(Imagen_Ruido_y_Filtro);
-title('Imagen con primero ruido y despues perdida de nitidez');
+imshow(log(1 + abs(fftshift(FiltroFrecInverso))), []);
+title('Filtro Inverso en Frecuencias');
 
+% Mostrar magnitud del producto G * H^-1 en frecuencia
 figure;
-imshow(ImagenRestauradaRuido_y_Filtro);
-title('Imagen Restaurada (Primero ruido y después perdida de nitidez)');
+imshow(log(1 + abs(fftshift(ProductoGHInverso))), []);
+title('Producto G * H^{-1} en Frecuencias');
 
-% 4
-
+% Mostrar imagen del producto G * H^-1 en el dominio espacial
 figure;
-imshow(Imagen_Filtro_y_Ruido);
-title('Imagen con primero perdida de nitidez y despues ruido');
-
-figure;
-imshow(ImagenRestauradaFiltro_y_Ruido);
-title('Imagen Restaurada (Primero perdida de nitidez y después ruido)');
+imshow(uint8(ImagenProductoGHInverso)); % Mostrar la parte real de la imagen resultante
+title('Imagen Producto G * H^{-1}');
